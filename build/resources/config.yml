@@ -1,0 +1,14 @@
+# Application
+app:
+  chunkSize: 3
+  logLevel: "info"
+
+# gRPC server
+server:
+  port: 2412
+
+# MongoDB
+mdb:
+  url: "mongodb"
+  port: 27017
+  database: db

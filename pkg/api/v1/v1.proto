@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+//option go_package = "github.com/itiky/mdb-tutorial/pkg/api/v1";
+
+// CSVFetcher.Fetch request message.
+message CSVFetchRequest {
+    string url = 1; // CSV-file URL
+}
+
+// CSVFetcher.Fetch response message.
+message CSVFetchResponse {
+
+}
+
+// Params for pagination supported requests.
+message PaginationParams {
+    uint32 skip = 1; // (optional) number of skipped response entries
+    uint32 limit = 2; // (optional) number of response entries per request (default: 50)
+}
+
+// Sort order enum.
+enum SortOrder {
+    Undefined = 0;
+    Asc = 1;
+    Desc = 2;
+}
+
+// Message for price entries request.
+message PriceEntry {
+    string product_name = 1; // product name
+    int64 timestamp = 2; // price change timestamp (UNIX-time) [s]
+    int32 price = 3; // price value
+}
+
+// PriceEntryReader.List request message.
+message ListRequest {
+    PaginationParams pagination = 1; // pagination params
+    SortOrder sort_by_name = 2; // (optional) sort by product names option
+    SortOrder sort_by_price = 3; // (optional) sort by prices option
+    SortOrder sort_by_timestamp = 4; // (optional) sort by timestamp option
+}
+
+// PriceEntryReader.List response message.
+message ListResponse {
+    repeated PriceEntry entries = 1;
+}
+
+// Service downloads, parses and processes CSV-file with multiple price changes per product.
+// CSV format: PRODUCT_NAME;PRICE
+service CSVFetcher {
+    rpc Fetch (CSVFetchRequest) returns (CSVFetchResponse) {
+    }
+}
+
+// Service queries stored price entries.
+service PriceEntryReader {
+    rpc List (ListRequest) returns (ListResponse) {
+    }
+}

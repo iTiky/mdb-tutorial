@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: "mongo:4"
+    environment:
+      MONGO_INITDB_DATABASE: db
+    ports:
+      - "27017:27017"
+
+  server_1:
+    image: "mdb-tutorial:1.0"
+    ports:
+      - "2420:2412"
+    restart: always
+    command: [ "/bin/sh", "-c", "/mdb-tutorial start --config /etc/config.yml" ]
+
+  server_2:
+    image: "mdb-tutorial:1.0"
+    ports:
+      - "2421:2412"
+    restart: always
+    command: [ "/bin/sh", "-c", "/mdb-tutorial start --config /etc/config.yml" ]
+
+  fileserver:
+    image: "mdb-tutorial:1.0"
+    ports:
+      - "2422:2412"
+    command: [ "/bin/sh", "-c", "/mdb-tutorial client file-server /etc/csv 2412" ]
+
+#  nginx:
+#    image: "nginx:1.13.11"
+#    ports:
+#      - "2412:2412"
+#    volumes:
+#      - ./resources/nginx.conf:/etc/nginx/nginx.conf
