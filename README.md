@@ -82,25 +82,27 @@ Those steps will start:
 * 2 gRPC servers (ports 2420 and 2421);
 * file server with mock CSV files (port 2422;
 * MongoDB database (port 27017);
+* Nginx as a gRPC requests balancer;
 
 ### Example commands
 
-Run the following commands from the local machine.
+As Docker compose uses TLS for `nginx` CN, we should do client requests withint Docker network.
 
-    # Overwrite defaults: use server_1 port for client connection
-    export MDB_TUTORIAL_SERVER_PORT=2420
+    # Switch to Docker compose directory
+    cd ${PROJECT_DIR}/build
     
     # Request price entries
-    mdb-tutorial client list --sort-by-price --limit 100
+    docker-compose run --rm client /mdb-tutorial client list --sort-by-price --limit 100
     
     # Fetch CSV files
-    mdb-tutorial client fetch http://fileserver:2412/1.csv
-    mdb-tutorial client fetch http://fileserver:2412/2.csv
-    mdb-tutorial client fetch http://fileserver:2412/partially_invalid.csv
-    mdb-tutorial client fetch http://fileserver:2412/invalid.csv
+    docker-compose run --rm client /mdb-tutorial client fetch http://fileserver:2412/1.csv
+    docker-compose run --rm client /mdb-tutorial client fetch http://fileserver:2412/2.csv
+    docker-compose run --rm client /mdb-tutorial client fetch http://fileserver:2412/partially_invalid.csv
+    docker-compose run --rm client /mdb-tutorial client fetch http://fileserver:2412/invalid.csv
     
     # Check logs
-    docker-compose logs server_1
+    docker-compose logs -f server_1
+    docker-compose logs -f server_2
 
 ## Implementation details
 
@@ -115,8 +117,8 @@ Run the following commands from the local machine.
 
 - [ ] avoid import duplicates: for example use fileName as a uniqueness factor;
 - [ ] raise the test coverage;
-- [ ] add TLS support to gRPC server/client;
-- [ ] configure Nginx as a gRPC request balancer;
+- [X] add TLS support to gRPC server/client;
+- [X] configure Nginx as a gRPC request balancer;
 - [ ] add MongoDB security configuration;
 - [ ] optimize storage layer performance (indices?);
 - [ ] optimize Docker image size;

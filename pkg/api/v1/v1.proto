@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+package v1;
 //option go_package = "github.com/itiky/mdb-tutorial/pkg/api/v1";
 
 // CSVFetcher.Fetch request message.

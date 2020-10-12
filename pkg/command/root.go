@@ -1,7 +1,9 @@
 package command
 
 import (
+	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -61,6 +63,31 @@ func initLogger() *logrus.Logger {
 	return l
 }
 
+// getServerTLSCertificate creates a TLS certificate used for gRPC server (cert file pair is taken from viper).
+func getServerTLSCertificate() (*tls.Certificate, error) {
+	certPath := viper.GetString(common.AppTLSCertPath)
+	keyPath := viper.GetString(common.AppTLSKeyPath)
+	if certPath == "" || keyPath == "" {
+		return nil, nil
+	}
+
+	certBytes, err := ioutil.ReadFile(certPath)
+	if err != nil {
+		return nil, fmt.Errorf("reading TLS cert file: %v", err)
+	}
+	keyBytes, err := ioutil.ReadFile(keyPath)
+	if err != nil {
+		return nil, fmt.Errorf("reading TLS key file: %v", err)
+	}
+
+	certificate, err := tls.X509KeyPair(certBytes, keyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("TLS certificate build failed: %v", err)
+	}
+
+	return &certificate, nil
+}
+
 func init() {
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file path")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "logging level (debug, info, warn, error, fatal, panic)")
@@ -68,9 +95,9 @@ func init() {
 		panic(err)
 	}
 
-	cobra.OnInitialize(initConfig)
-
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.SetEnvPrefix("MDB_TUTORIAL")
 	viper.AutomaticEnv()
+
+	cobra.OnInitialize(initConfig)
 }

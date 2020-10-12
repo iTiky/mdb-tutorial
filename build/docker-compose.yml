@@ -12,6 +12,12 @@ services:
     image: "mdb-tutorial:1.0"
     ports:
       - "2420:2412"
+    environment:
+      - MDB_TUTORIAL_APP_TLS_CERTPATH=/run/secrets/tls.cert
+      - MDB_TUTORIAL_APP_TLS_KEYPATH=/run/secrets/tls.key
+    secrets:
+      - tls.cert
+      - tls.key
     restart: always
     command: [ "/bin/sh", "-c", "/mdb-tutorial start --config /etc/config.yml" ]
 
@@ -19,8 +25,25 @@ services:
     image: "mdb-tutorial:1.0"
     ports:
       - "2421:2412"
+    environment:
+      - MDB_TUTORIAL_APP_TLS_CERTPATH=/run/secrets/tls.cert
+      - MDB_TUTORIAL_APP_TLS_KEYPATH=/run/secrets/tls.key
+    secrets:
+      - tls.cert
+      - tls.key
     restart: always
     command: [ "/bin/sh", "-c", "/mdb-tutorial start --config /etc/config.yml" ]
+
+  client:
+    image: "mdb-tutorial:1.0"
+    environment:
+      - MDB_TUTORIAL_APP_TLS_CERTPATH=/run/secrets/tls.cert
+      - MDB_TUTORIAL_SERVER_HOST=nginx
+      - MDB_TUTORIAL_SERVER_PORT=1443
+    secrets:
+      - tls.cert
+      - tls.key
+    command: [ "/bin/sh", "-c", "echo 'Service disabled" ]
 
   fileserver:
     image: "mdb-tutorial:1.0"
@@ -28,9 +51,18 @@ services:
       - "2422:2412"
     command: [ "/bin/sh", "-c", "/mdb-tutorial client file-server /etc/csv 2412" ]
 
-#  nginx:
-#    image: "nginx:1.13.11"
-#    ports:
-#      - "2412:2412"
-#    volumes:
-#      - ./resources/nginx.conf:/etc/nginx/nginx.conf
+  nginx:
+    image: "nginx:1.13.11"
+    ports:
+      - "127.0.0.1:1443:1443"
+    volumes:
+      - ./resources/nginx.conf:/etc/nginx/nginx.conf
+    secrets:
+      - tls.cert
+      - tls.key
+
+secrets:
+  tls.cert:
+    file: ./resources/tls.cert
+  tls.key:
+    file: ./resources/tls.key

@@ -2,7 +2,9 @@ package command
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,6 +18,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	v1 "github.com/itiky/mdb-tutorial/pkg/api/v1"
 	"github.com/itiky/mdb-tutorial/pkg/common"
@@ -48,7 +51,7 @@ func GetClientListCmd() *cobra.Command {
 			sortByName, sortByPrice, sortByTimestamp := parseSortFlag(flagSortByName, cmd.Flags()), parseSortFlag(flagSortByPrice, cmd.Flags()), parseSortFlag(flagSortByTimestamp, cmd.Flags())
 
 			// create gRPC client
-			conn, err := createGRPCConnection()
+			conn, err := createGRPCClientConnection(logger)
 			if err != nil {
 				logger.Fatalf(err.Error())
 			}
@@ -107,7 +110,7 @@ func GetClientFetchCmd() *cobra.Command {
 			logger := initLogger()
 
 			// create gRPC client
-			conn, err := createGRPCConnection()
+			conn, err := createGRPCClientConnection(logger)
 			if err != nil {
 				logger.Fatalf(err.Error())
 			}
@@ -199,15 +202,44 @@ func parseSortFlag(flagName string, flags *pflag.FlagSet) v1.SortOrder {
 	}
 }
 
-// createGRPCConnection creates a new gRPC client connection.
-func createGRPCConnection() (*grpc.ClientConn, error) {
+// createGRPCClientConnection creates a new gRPC client connection.
+func createGRPCClientConnection(logger *logrus.Logger) (*grpc.ClientConn, error) {
+	var dialOption grpc.DialOption
+
+	certPath := viper.GetString(common.AppTLSCertPath)
+	if certPath != "" {
+		// secure connection
+		certBytes, err := ioutil.ReadFile(certPath)
+		if err != nil {
+			return nil, fmt.Errorf("reading TLS cert file: %v", err)
+		}
+
+		certPool := x509.NewCertPool()
+		if ok := certPool.AppendCertsFromPEM(certBytes); !ok {
+			return nil, fmt.Errorf("CertPool append failed")
+		}
+
+		transportCreds := credentials.NewClientTLSFromCert(certPool, "")
+		dialOption = grpc.WithTransportCredentials(transportCreds)
+
+		logger.Infof("client gRPC connection: TLS enabled")
+	} else {
+		// insecure connection
+		dialOption = grpc.WithInsecure()
+
+		logger.Infof("client gRPC connection: insecure")
+	}
+
+	serverAddr := fmt.Sprintf("%s:%s", viper.GetString(common.ServerHost), viper.GetString(common.ServerPort))
 	conn, err := grpc.Dial(
-		fmt.Sprintf("localhost:%s", viper.GetString(common.ServerPort)),
-		grpc.WithInsecure(),
+		serverAddr,
+		dialOption,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("creating client connection failed: %v", err)
 	}
+
+	logger.Infof("client gRPC: %s", serverAddr)
 
 	return conn, nil
 }

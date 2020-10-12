@@ -2,7 +2,6 @@ package command
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -55,17 +54,24 @@ var serverCmd = &cobra.Command{
 			logger.Fatalf("service dep init: %v", err)
 		}
 
+		// get TLS certificate
+		certificate, err := getServerTLSCertificate()
+		if err != nil {
+			logger.Fatalf(err.Error())
+		}
+
 		// Start gRPC server
 		server, err := v1.NewServer(
 			v1.WithService(service),
 			v1.WithLogger(logger),
 			v1.WithCSVChunkSize(viper.GetInt(common.AppChunkSize)),
+			v1.WithTLS(certificate),
 		)
 		if err != nil {
 			logger.Fatalf("server dep init: %v", err)
 		}
 
-		serverListener, err := net.Listen("tcp", fmt.Sprintf(":%s", viper.GetString(common.ServerPort)))
+		serverListener, err := net.Listen("tcp", ":"+viper.GetString(common.ServerPort))
 		if err != nil {
 			log.Fatalf("server listener init: %v", err)
 		}

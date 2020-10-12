@@ -30,7 +30,7 @@ func NewCSVFetcherClient(cc grpc.ClientConnInterface) CSVFetcherClient {
 
 func (c *cSVFetcherClient) Fetch(ctx context.Context, in *CSVFetchRequest, opts ...grpc.CallOption) (*CSVFetchResponse, error) {
 	out := new(CSVFetchResponse)
-	err := c.cc.Invoke(ctx, "/CSVFetcher/Fetch", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/v1.CSVFetcher/Fetch", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func _CSVFetcher_Fetch_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/CSVFetcher/Fetch",
+		FullMethod: "/v1.CSVFetcher/Fetch",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CSVFetcherServer).Fetch(ctx, req.(*CSVFetchRequest))
@@ -84,7 +84,7 @@ func _CSVFetcher_Fetch_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 var _CSVFetcher_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "CSVFetcher",
+	ServiceName: "v1.CSVFetcher",
 	HandlerType: (*CSVFetcherServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -113,7 +113,7 @@ func NewPriceEntryReaderClient(cc grpc.ClientConnInterface) PriceEntryReaderClie
 
 func (c *priceEntryReaderClient) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
 	out := new(ListResponse)
-	err := c.cc.Invoke(ctx, "/PriceEntryReader/List", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/v1.PriceEntryReader/List", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func _PriceEntryReader_List_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/PriceEntryReader/List",
+		FullMethod: "/v1.PriceEntryReader/List",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PriceEntryReaderServer).List(ctx, req.(*ListRequest))
@@ -167,7 +167,7 @@ func _PriceEntryReader_List_Handler(srv interface{}, ctx context.Context, dec fu
 }
 
 var _PriceEntryReader_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "PriceEntryReader",
+	ServiceName: "v1.PriceEntryReader",
 	HandlerType: (*PriceEntryReaderServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

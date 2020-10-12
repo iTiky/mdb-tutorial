@@ -1,11 +1,13 @@
 package v1
 
 import (
+	"crypto/tls"
 	fmt "fmt"
 	"io/ioutil"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/itiky/mdb-tutorial/pkg/service"
 )
@@ -18,7 +20,8 @@ type gRPCServer struct {
 	service service.Service
 	logger  *logrus.Logger
 	//
-	csvChunkSize int
+	csvChunkSize   int
+	tlsCertificate *tls.Certificate
 }
 
 func (s gRPCServer) mustEmbedUnimplementedCSVFetcherServer()       {}
@@ -60,8 +63,19 @@ func WithCSVChunkSize(size int) Option {
 	}
 }
 
+// WithTLS enabled TLS encryption fro server.
+func WithTLS(certificate *tls.Certificate) Option {
+	return func(server *gRPCServer) error {
+		server.tlsCertificate = certificate
+
+		return nil
+	}
+}
+
 // NewServer creates a new configured gRPCServer object.
 func NewServer(options ...Option) (*grpc.Server, error) {
+	var serverOptions []grpc.ServerOption
+
 	s := &gRPCServer{
 		csvChunkSize: 1000,
 	}
@@ -77,7 +91,16 @@ func NewServer(options ...Option) (*grpc.Server, error) {
 		s.logger = logger
 	}
 
-	gRPCServer := grpc.NewServer()
+	// TLS option
+	if s.tlsCertificate != nil {
+		transportCreds := credentials.NewServerTLSFromCert(s.tlsCertificate)
+		serverOptions = append(serverOptions, grpc.Creds(transportCreds))
+		s.logger.Infof("gRPC server: using TLS")
+	} else {
+		s.logger.Infof("gRPC server: insecure")
+	}
+
+	gRPCServer := grpc.NewServer(serverOptions...)
 	RegisterCSVFetcherServer(gRPCServer, s)
 	RegisterPriceEntryReaderServer(gRPCServer, s)
 
